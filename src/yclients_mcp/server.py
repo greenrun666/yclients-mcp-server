@@ -124,8 +124,7 @@ def run_http():
 def main():
     """Main entry point."""
     if not settings.yclients_partner_token:
-        logger.error("YCLIENTS_PARTNER_TOKEN environment variable is required")
-        sys.exit(1)
+        logger.warning("YCLIENTS_PARTNER_TOKEN not set - API calls will fail until configured")
     
     if settings.mcp_transport == "stdio":
         asyncio.run(run_stdio())
