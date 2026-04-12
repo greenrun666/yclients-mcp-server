@@ -20,6 +20,9 @@ mcp = FastMCP(
     json_response=True,
 )
 
+mcp.settings.host = settings.mcp_host
+mcp.settings.port = settings.mcp_port
+
 register_all_tools(mcp)
 
 
@@ -33,11 +36,7 @@ def main():
     if settings.mcp_transport == "stdio":
         mcp.run(transport="stdio")
     else:
-        mcp.run(
-            transport="streamable-http",
-            host=settings.mcp_host,
-            port=settings.mcp_port,
-        )
+        mcp.run(transport="streamable-http")
 
 
 if __name__ == "__main__":
