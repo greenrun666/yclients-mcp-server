@@ -1,0 +1,75 @@
+name: Deploy to Timeweb VDS
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+env:
+  SERVER_IP: 185.233.187.98
+  SERVER_USER: root
+  APP_DIR: /opt/yclients-mcp-server
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ env.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        run: |
+          ssh ${{ env.SERVER_USER }}@${{ env.SERVER_IP }} << 'ENDSSH'
+            set -e
+            
+            # Update and install dependencies (first run only)
+            if [ ! -d "${{ env.APP_DIR }}" ]; then
+              apt-get update
+              apt-get install -y docker.io docker-compose-plugin
+              systemctl enable docker
+              systemctl start docker
+            fi
+            
+            # Clone or pull repository
+            if [ -d "${{ env.APP_DIR }}" ]; then
+              cd ${{ env.APP_DIR }}
+              git pull origin master
+            else
+              git clone https://github.com/${{ github.repository }}.git ${{ env.APP_DIR }}
+              cd ${{ env.APP_DIR }}
+            fi
+            
+            # Build and restart container
+            docker build -t yclients-mcp-server .
+            docker stop yclients-mcp || true
+            docker rm yclients-mcp || true
+            docker run -d \
+              --name yclients-mcp \
+              --restart unless-stopped \
+              -p 8000:8000 \
+              -e YCLIENTS_PARTNER_TOKEN="${{ secrets.YCLIENTS_PARTNER_TOKEN }}" \
+              -e YCLIENTS_USER_TOKEN="${{ secrets.YCLIENTS_USER_TOKEN }}" \
+              -e MCP_TRANSPORT=http \
+              -e MCP_HOST=0.0.0.0 \
+              -e MCP_PORT=8000 \
+              yclients-mcp-server
+            
+            # Cleanup old images
+            docker image prune -f
+            
+            echo "Deployment completed!"
+          ENDSSH
+
+      - name: Health check
+        run: |
+          sleep 10
+          curl -f http://${{ env.SERVER_IP }}:8000/health || exit 1
+          echo "Health check passed!"

@@ -1,0 +1,21 @@
+app:
+  name: yclients-mcp-server
+  type: backend
+  preset_id: 1003
+  auto_deploy: false
+  is_production: true
+  
+  repository:
+    url: https://github.com/greenrun666/yclients-mcp-server.git
+    branch: master
+  
+  configuration:
+    build_cmd: pip install -e .
+    run_cmd: python -m yclients_mcp.server
+    
+  envs:
+    MCP_TRANSPORT: http
+    MCP_HOST: "0.0.0.0"
+    MCP_PORT: "8000"
+    MCP_LOG_LEVEL: INFO
+    YCLIENTS_PARTNER_TOKEN: YOUR_PARTNER_TOKEN_HERE
