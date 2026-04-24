@@ -37,6 +37,14 @@ class Settings(BaseSettings):
         default="INFO",
         description="Logging level"
     )
+    mcp_allowed_hosts: str = Field(
+        default="localhost,localhost:*,127.0.0.1,127.0.0.1:*,ycmcp.mybotai.net,ycmcp.mybotai.net:*",
+        description="Comma-separated list of allowed Host headers"
+    )
+    mcp_allowed_origins: str = Field(
+        default="http://localhost,http://localhost:*,http://127.0.0.1,http://127.0.0.1:*,https://ycmcp.mybotai.net,http://ycmcp.mybotai.net",
+        description="Comma-separated list of allowed Origin headers"
+    )
     
     class Config:
         env_file = ".env"
