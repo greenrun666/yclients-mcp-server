@@ -118,6 +118,8 @@ def main():
             host=settings.mcp_host,
             port=settings.mcp_port,
             log_level=settings.mcp_log_level.lower(),
+            proxy_headers=True,
+            forwarded_allow_ips="*",
         )
 
 
